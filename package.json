@@ -1,0 +1,18 @@
+{
+  "name": "dashboardsJobScheduler",
+  "version": "3.7.0",
+  "private": true,
+  "scripts": {
+    "lint:es": "node ../../scripts/eslint",
+    "lint:style": "node ../../scripts/stylelint",
+    "lint": "yarn run lint:es && yarn run lint:style",
+    "build": "yarn plugin-helpers build",
+    "plugin-helpers": "../../scripts/use_node ../../scripts/plugin_helpers",
+    "osd": "../../scripts/use_node ../../scripts/osd"
+  },
+  "devDependencies": {
+    "@elastic/eslint-import-resolver-kibana": "link:../../packages/osd-eslint-import-resolver-opensearch-dashboards",
+    "eslint-plugin-cypress": "^2.8.1",
+    "eslint-plugin-unused-imports": "3.1.0"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "id": "dashboardsJobScheduler",
+  "version": "3.7.0",
+  "opensearchDashboardsVersion": "opensearchDashboards",
+  "server": true,
+  "ui": true,
+  "requiredPlugins": ["navigation"],
+  "optionalPlugins": []
+}

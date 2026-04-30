@@ -1,0 +1,6 @@
+{
+  "prefix": "dashboardsJobScheduler",
+  "paths": {
+    "dashboardsJobScheduler": "."
+  }
+}
