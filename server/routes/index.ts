@@ -38,17 +38,17 @@ export function defineRoutes(router: IRouter) {
     async (context, request, response) => {
       try {
         const client = context.core.opensearch.client.asCurrentUser;
-        
+
         const requestOptions: any = {
           method: 'GET',
-          path: '/_plugins/_job_scheduler/api/jobs'
+          path: '/_plugins/_job_scheduler/api/jobs',
         };
         const result = await client.transport.request(requestOptions);
         return response.ok({ body: result.body });
       } catch (error) {
         return response.customError({
           statusCode: error.statusCode || 500,
-          body: error.message
+          body: error.message,
         });
       }
     }
@@ -62,17 +62,17 @@ export function defineRoutes(router: IRouter) {
     async (context, request, response) => {
       try {
         const client = context.core.opensearch.client.asCurrentUser;
-        
+
         const requestOptions: any = {
           method: 'GET',
-          path: '/_plugins/_job_scheduler/api/locks'
+          path: '/_plugins/_job_scheduler/api/locks',
         };
         const result = await client.transport.request(requestOptions);
         return response.ok({ body: result.body });
       } catch (error) {
         return response.customError({
           statusCode: error.statusCode || 500,
-          body: error.message
+          body: error.message,
         });
       }
     }
@@ -86,17 +86,17 @@ export function defineRoutes(router: IRouter) {
     async (context, request, response) => {
       try {
         const client = context.core.opensearch.client.asCurrentUser;
-        
+
         const requestOptions: any = {
           method: 'GET',
-          path: '/_plugins/_job_scheduler/api/history'
+          path: '/_plugins/_job_scheduler/api/history',
         };
         const result = await client.transport.request(requestOptions);
         return response.ok({ body: result.body });
       } catch (error) {
         return response.customError({
           statusCode: error.statusCode || 500,
-          body: error.message
+          body: error.message,
         });
       }
     }

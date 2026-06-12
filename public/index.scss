@@ -1,1 +1,17 @@
-/* stylelint-disable no-empty-source */
+.dashboardsJobSchedulerStatusDot {
+  display: inline-block;
+  margin-right: 8px;
+  transform: scale(1.5);
+}
+
+.dashboardsJobSchedulerStatusDot--disabled {
+  color: $ouiColorMediumShade;
+}
+
+.dashboardsJobSchedulerStatusDot--running {
+  color: $ouiColorSuccess;
+}
+
+.dashboardsJobSchedulerStatusDot--idle {
+  color: $ouiColorWarning;
+}

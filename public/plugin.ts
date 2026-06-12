@@ -14,7 +14,13 @@
  */
 
 import { i18n } from '@osd/i18n';
-import { AppMountParameters, CoreSetup, CoreStart, Plugin, DEFAULT_APP_CATEGORIES } from '../../../src/core/public';
+import {
+  AppMountParameters,
+  CoreSetup,
+  CoreStart,
+  Plugin,
+  DEFAULT_APP_CATEGORIES,
+} from '../../../src/core/public';
 import {
   DashboardsJobSchedulerPluginSetup,
   DashboardsJobSchedulerPluginStart,
@@ -40,7 +46,6 @@ export class DashboardsJobSchedulerPlugin
       },
     });
 
-    // Return methods that should be available to other plugins
     return {
       getGreeting() {
         return i18n.translate('dashboardsJobScheduler.greetingText', {

@@ -27,7 +27,7 @@ Current expectations:
 
 | Dashboards Job Scheduler | OpenSearch Dashboards |
 | ------------------------ | --------------------- |
-| 3.7.0                    | 3.7.0                 |
+| 3.8.0                    | 3.8.0                 |
 
 The plugin version should match the OpenSearch Dashboards version it is built against.
 
