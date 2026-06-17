@@ -35,49 +35,27 @@ import { CoreStart } from '../../../../src/core/public';
 import { NavigationPublicPluginStart } from '../../../../src/plugins/navigation/public';
 
 import { PLUGIN_ID } from '../../common';
+import {
+  filterHistoryByJobId,
+  filterHistoryBySearchQuery,
+  filterJobs,
+  getActiveJobs,
+  getJobsWithLockDuration,
+  isJobRunning,
+  mapHistoryEntries,
+  sortHistoryByStartTimeDesc,
+  Job,
+  JobHistoryEntry,
+  JobHistoryRecord,
+  JobLocks,
+  JobSchedule,
+} from './job_utils';
 
 interface DashboardsJobSchedulerAppDeps {
   basename: string;
   notifications: CoreStart['notifications'];
   http: CoreStart['http'];
   navigation: NavigationPublicPluginStart;
-}
-interface JobSchedule {
-  type?: string;
-  expression?: string;
-  timezone?: string;
-  interval?: number | string;
-  unit?: string;
-}
-
-interface Job {
-  job_id: string;
-  name?: string;
-  job_type?: string;
-  index_name?: string;
-  enabled?: boolean;
-  descheduled?: boolean;
-  lock_duration?: string;
-  last_execution_time?: string;
-  next_expected_execution_time?: string;
-  schedule?: JobSchedule;
-}
-
-interface JobLock {
-  released?: boolean;
-}
-
-type JobLocks = Record<string, JobLock>;
-
-interface JobHistoryEntry {
-  key: string;
-  job_id?: string;
-  job_index_name?: string;
-  start_time: number;
-  end_time: number;
-  duration: number;
-  completion_status?: number;
-  status: string;
 }
 
 const API_PATHS = {
@@ -93,31 +71,6 @@ const EMPTY_DATE_LABEL = i18n.translate('dashboardsJobScheduler.emptyDateLabel',
 const INVALID_DATE_LABEL = i18n.translate('dashboardsJobScheduler.invalidDateLabel', {
   defaultMessage: 'Invalid date',
 });
-
-const getJobLockKey = (job: Job) => `${job.index_name}-${job.job_id}`;
-
-const isJobRunning = (job: Job, locks?: JobLocks) => {
-  const lockKey = getJobLockKey(job);
-  return Boolean(job.enabled && locks?.[lockKey] && !locks[lockKey].released);
-};
-
-const getLifecycleLabel = (job: Job) =>
-  job.descheduled ? 'descheduled' : job.enabled ? 'active' : 'inactive';
-
-const getSearchableJobFields = (job: Job) =>
-  [
-    job.job_id,
-    job.name,
-    job.job_type,
-    job.last_execution_time,
-    job.next_expected_execution_time,
-    job.schedule?.expression,
-    job.schedule?.timezone,
-    job.enabled ? 'enabled' : 'disabled',
-    getLifecycleLabel(job),
-  ]
-    .filter((value): value is string | number | boolean => value !== undefined && value !== null)
-    .map(String);
 
 const formatDateTime = (dateString?: string) => {
   if (!dateString || dateString.toLowerCase() === 'none') return EMPTY_DATE_LABEL;
@@ -232,14 +185,7 @@ const JobsTable = ({
   onSearchChange,
   onRefresh,
 }: JobsTableProps) => {
-  let filteredJobs =
-    jobTypeFilter === 'all' ? jobs : jobs.filter((job) => job.job_type === jobTypeFilter);
-  if (searchQuery) {
-    const query = searchQuery.toLowerCase();
-    filteredJobs = filteredJobs.filter((job) =>
-      getSearchableJobFields(job).some((value) => value.toLowerCase().includes(query))
-    );
-  }
+  const filteredJobs = filterJobs(jobs, jobTypeFilter, searchQuery);
   const startIndex = pageIndex * pageSize;
   const endIndex = startIndex + pageSize;
   const pageItems = filteredJobs.slice(startIndex, endIndex);
@@ -463,14 +409,10 @@ const ActiveJobsPanel = ({ http, notifications }: PanelDeps) => {
         try {
           const locksRes = await http.get<{ locks?: JobLocks }>(API_PATHS.locks);
           const activeLocks = locksRes.locks || {};
-          setJobs(allJobs.filter((job) => isJobRunning(job, activeLocks)));
+          setJobs(getActiveJobs(allJobs, activeLocks));
           setLocks(activeLocks);
         } catch {
-          setJobs(
-            allJobs.filter(
-              (job) => job.enabled && job.lock_duration && job.lock_duration !== 'no_lock'
-            )
-          );
+          setJobs(getJobsWithLockDuration(allJobs));
           setLocks({});
         }
         notifications.toasts.addSuccess(successMessage);
@@ -528,18 +470,10 @@ const HistoryPanel = ({ http, notifications, jobId }: PanelDeps & { jobId: strin
     const loadHistory = async () => {
       try {
         const res = await http.get<{
-          history?: Record<string, Omit<JobHistoryEntry, 'key' | 'duration' | 'status'>>;
+          history?: Record<string, JobHistoryRecord>;
         }>(API_PATHS.history);
-        const historyArray = Object.entries(res.history || {}).map(([key, value]) => ({
-          key,
-          ...value,
-          duration: value.end_time - value.start_time,
-          status: value.completion_status === 0 ? 'Success' : 'Failed',
-        }));
-        const filteredHistory = jobId
-          ? historyArray.filter((h) => h.job_id === jobId)
-          : historyArray;
-        setHistory(filteredHistory.sort((a, b) => b.start_time - a.start_time));
+        const filteredHistory = filterHistoryByJobId(mapHistoryEntries(res.history), jobId);
+        setHistory(sortHistoryByStartTimeDesc(filteredHistory));
         notifications.toasts.addSuccess('Job history loaded');
       } catch (error) {
         notifications.toasts.addError(error as Error, { title: 'Failed to fetch job history' });
@@ -549,9 +483,7 @@ const HistoryPanel = ({ http, notifications, jobId }: PanelDeps & { jobId: strin
     loadHistory();
   }, [http, jobId, notifications.toasts]);
 
-  const filteredHistory = searchQuery
-    ? history.filter((h) => h.job_id?.toLowerCase().includes(searchQuery.toLowerCase()))
-    : history;
+  const filteredHistory = filterHistoryBySearchQuery(history, searchQuery);
   const startIndex = pageIndex * pageSize;
   const endIndex = startIndex + pageSize;
   const pageItems = filteredHistory.slice(startIndex, endIndex);
