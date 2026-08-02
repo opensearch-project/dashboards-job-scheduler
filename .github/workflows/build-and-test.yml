@@ -1,0 +1,50 @@
+---
+name: Build and Test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          repository: opensearch-project/OpenSearch-Dashboards
+          ref: main
+          path: OpenSearch-Dashboards
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          path: OpenSearch-Dashboards/plugins/dashboards-job-scheduler
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: OpenSearch-Dashboards/.node-version
+
+      - name: Install Yarn
+        run: |
+          YARN_VERSION=$(node -p "require('./OpenSearch-Dashboards/package.json').engines.yarn")
+          npm install --global yarn@$YARN_VERSION
+
+      - name: Install dependencies
+        run: yarn osd bootstrap --single-version=loose
+        working-directory: OpenSearch-Dashboards
+
+      - name: Run lint
+        run: yarn lint
+        working-directory: OpenSearch-Dashboards/plugins/dashboards-job-scheduler
+
+      - name: Run unit tests
+        run: yarn test
+        working-directory: OpenSearch-Dashboards/plugins/dashboards-job-scheduler
+
+      - name: Build plugin
+        run: yarn build
+        working-directory: OpenSearch-Dashboards/plugins/dashboards-job-scheduler

@@ -6,5 +6,8 @@
  * compatible open source license.
  */
 
-export const PLUGIN_ID = 'dashboardsJobScheduler';
-export const PLUGIN_NAME = 'dashboards-job-scheduler';
+require('@testing-library/jest-dom/extend-expect');
+
+const { configure } = require('@testing-library/react');
+
+configure({ testIdAttribute: 'data-test-subj' });
